@@ -1,3 +1,6 @@
+export const runtime = 'nodejs';      // 👈 run in Node, not Edge
+export const dynamic = 'force-dynamic'; // avoid file-system caching
+
 // src/app/api/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { db, loginCodes, prizes } from '@/lib/db';
