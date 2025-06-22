@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1750607457637,
+      "tag": "0000_far_captain_cross",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1750612806021,
+      "tag": "0001_bitter_morg",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1750613435642,
+      "tag": "0002_military_blindfold",
+      "breakpoints": true
+    }
+  ]
+}
