@@ -193,7 +193,7 @@ export default function GachaGame() {
               {prize.imageUrl && <img src={prize.imageUrl} alt={prize.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />}
               <span>Du fikk: {prize.name}</span>
               {!confirmed ? (
-                <button onClick={handleConfirmClick} className="ml-3 sm:ml-4 px-3 sm:px-4 py-0.5 sm:py-1 bg-amber-500 hover:bg-amber-600 text-white rounded transition text-base sm:text-lg">Bekreft</button>
+                <button onClick={handleConfirmClick} className="ml-3 sm:ml-4 px-3 sm:px-4 py-0.5 sm:py-1 bg-amber-500 hover:bg-amber-600 text-white rounded transition text-base sm:text-lg">Velg gave</button>
               ) : (
                 <span className="ml-3 sm:ml-4 text-emerald-700">✔ Lagret</span>
               )}
