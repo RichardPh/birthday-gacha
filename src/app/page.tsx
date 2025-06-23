@@ -35,6 +35,7 @@ export default function LoginPage() {
       remaining: data.remaining,
       chosenPrize: data.chosenPrize ?? null,
     });
+    console.log('pushing to', `/game/${code}`);
     router.push(`/game/${code}`);
   }
 
