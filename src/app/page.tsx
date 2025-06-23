@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/store/useSession';
 import clsx from 'clsx';
 
 export default function LoginPage() {
-  const [code, setCode] = useState('');
+  const [code, setCode]   = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
   const { set } = useSession();
 
@@ -16,28 +18,38 @@ export default function LoginPage() {
     set({ code: '', game: null, remaining: 0, chosenPrize: null });
   }, [set]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!code.trim()) return;
     setError('');
+    setLoading(true);
 
-    const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code }),
-    });
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
 
-    const data = await res.json();
-    if (!res.ok) return setError(data.error);
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error);
+        return;
+      }
 
-    set({
-      code,
-      game: data.game,
-      remaining: data.remaining,
-      chosenPrize: data.chosenPrize ?? null,
-    });
-    console.log('pushing to', `/game/${code}`);
-    router.push(`/game/${code}`);
-  }
+      set({
+        code,
+        game: data.game,
+        remaining: data.remaining,
+        chosenPrize: data.chosenPrize ?? null,
+      });
+      router.push(`/game/${code}`);
+    } catch (err) {
+      setError('Uventet nettverksfeil.');
+    } finally {
+      setLoading(false);
+    }
+  }, [code, set, router]);
 
   return (
     <main className="h-screen flex items-center justify-center bg-gradient-to-br from-indigo-200 to-fuchsia-200">
@@ -56,7 +68,9 @@ export default function LoginPage() {
           className={clsx(
             'w-full p-2 rounded-lg border text-slate-900 placeholder-slate-500',
             'focus:outline-none focus:ring-2',
-            error ? 'border-red-400 focus:ring-red-300' : 'border-slate-300 focus:ring-indigo-400'
+            error
+              ? 'border-red-400 focus:ring-red-300'
+              : 'border-slate-300 focus:ring-indigo-400'
           )}
         />
 
@@ -68,10 +82,40 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          disabled={!code.trim()}
-          className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition disabled:opacity-40"
+          disabled={loading || !code.trim()}
+          className={clsx(
+            'w-full py-2 rounded-lg font-semibold transition disabled:opacity-40 flex items-center justify-center',
+            'bg-indigo-600 hover:bg-indigo-700',
+            !loading && 'cursor-pointer text-white'
+          )}
         >
-          Slipp&nbsp;meg&nbsp;inn!
+          {loading ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 text-white mr-2"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                />
+              </svg>
+              Laster …
+            </>
+          ) : (
+            'Slipp meg inn!'
+          )}
         </button>
       </form>
     </main>
