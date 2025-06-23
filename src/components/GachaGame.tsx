@@ -1,13 +1,3 @@
-/*
- * Deluxe Animated Gachapon Machine v20 📱✨
- * -----------------------------------------------------------------------------
- *  🔹 NEW in v20 – Mobile‑first responsive layout
- *      • Drum, knob, chute, banner & bubbles all scale down on screens < 640 px.
- *      • Knob re‑positions beneath the drum on mobile to avoid horizontal scroll.
- *      • Uses Tailwind break‑points (sm, md) so desktop appearance is unchanged.
- * -----------------------------------------------------------------------------
- */
-
 'use client';
 
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
@@ -16,7 +6,6 @@ import { useSession } from '@/store/useSession';
 import { useEffect, useState, useCallback } from 'react';
 import { useWindowSize } from '@react-hook/window-size';
 
-// ---------------------------------------------------------------------------
 interface Prize {
   id: number;
   name: string;
@@ -43,10 +32,11 @@ function Bubble({ prize, vw, vh }: { prize: Prize; vw: number; vh: number }) {
       transition: { duration: rand(6, 12), ease: 'easeInOut', onComplete: wander },
     });
   }, [controls, vw, vh]);
+
   useEffect(() => {
     wander();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [wander]);
+
   return (
     <motion.img
       src={prize.imageUrl as string}
@@ -58,14 +48,13 @@ function Bubble({ prize, vw, vh }: { prize: Prize; vw: number; vh: number }) {
   );
 }
 
-// ---------------------------------------------------------------------------
 export default function GachaGame() {
   const { code, remaining, chosenPrize, set } = useSession();
 
   const [isSpinning, setIsSpinning] = useState(false);
   const [capsuleIdx, setCapsuleIdx] = useState<number | null>(null);
   const [prize, setPrize] = useState<Prize | null>(null);
-  const [confirmed, setConfirmed] = useState<boolean>(false);
+  const [confirmed, setConfirmed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [bubbles, setBubbles] = useState<Prize[]>([]);
@@ -74,12 +63,10 @@ export default function GachaGame() {
   const dialCtrl = useAnimationControls();
   const [vw, vh] = useWindowSize();
 
-  // fetch prizes once
   useEffect(() => {
     fetch('/api/prizes').then(r => r.json()).then((rows: Prize[]) => setBubbles(rows));
   }, []);
 
-  // hydrate with saved prize
   useEffect(() => {
     if (chosenPrize && !confirmed) {
       setPrize(chosenPrize);
@@ -104,8 +91,8 @@ export default function GachaGame() {
     }
     const data = await res.json();
     const serverPrize: Prize = data.prize;
-
     const idx = Math.floor(Math.random() * CAPSULES.length);
+
     rotorCtrl.start({ rotate: 720, transition: { duration: SPIN_DURATION, ease: 'easeInOut' } });
     dialCtrl
       .start({ rotate: 90, transition: { duration: KNOB_TURN, ease: 'easeOut' } })
@@ -128,53 +115,40 @@ export default function GachaGame() {
   }, [isSpinning, remaining, confirmed, code, set, rotorCtrl, dialCtrl]);
 
   const handleConfirmClick = () => setShowModal(true);
-  const confirmPrize = async () => {
+
+  const confirmPrize = useCallback(async () => {
     if (!prize || confirmed) return;
     const res = await fetch('/api/confirm', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, prizeId: prize.id }),
     });
-    if (!res.ok) {
-      alert('Kunne ikke lagre premien.');
-      return;
-    }
+    if (!res.ok) return alert('Kunne ikke lagre premien.');
     setConfirmed(true);
     setShowModal(false);
     set({ remaining: 0, chosenPrize: prize });
-  };
+  }, [prize, confirmed, code, set]);
 
-  /* ---------------------------------------------------------------------- */
   return (
-    <section className="min-h-screen overflow-hidden flex flex-col items-center justify-center bg-amber-50 relative px-2 sm:px-0">
-      {/* wandering bubbles */}
+    <section className="min-h-screen overflow-hidden flex flex-col items-center justify-start bg-rose-50 relative px-2 pt-2 sm:pt-0 lg:pt-20">
       {bubbles.map(p => p.imageUrl && <Bubble key={p.id} prize={p} vw={vw} vh={vh} />)}
+
       {showConfetti && <Confetti width={vw} height={vh} recycle={false} numberOfPieces={320} />}
 
-      <h2 className="text-3xl sm:text-4xl font-extrabold text-amber-900 mb-6 sm:mb-8 drop-shadow-sm">
-        Gachapon&nbsp;Machine
-      </h2>
+      <h2 className="text-3xl sm:text-4xl font-extrabold text-amber-900 mb-4 sm:mb-6 drop-shadow-sm">Gachapon&nbsp;Machine</h2>
 
-      {/* Machine wrapper */}
       <div className="relative flex flex-col items-center">
-        {/* Drum frame */}
         <div className="w-[260px] h-[280px] sm:w-[300px] sm:h-[320px] bg-amber-200 rounded-3xl border-8 border-amber-300 shadow-inner flex items-center justify-center">
-          {/* Spinning rotor */}
           <motion.div
             className="relative flex flex-wrap justify-center items-center w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] overflow-hidden rounded-full"
             animate={rotorCtrl}
           >
             {CAPSULES.map((clr, i) => (
-              <motion.div
-                key={i}
-                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full m-1 shadow-lg"
-                style={{ backgroundColor: clr, opacity: capsuleIdx === i ? 0 : 1 }}
-              />
+              <motion.div key={i} className="w-8 h-8 sm:w-9 sm:h-9 rounded-full m-1 shadow-lg" style={{ backgroundColor: clr, opacity: capsuleIdx === i ? 0 : 1 }} />
             ))}
           </motion.div>
         </div>
 
-        {/* Rotary knob – becomes relative & stacks below on mobile */}
         <div className="relative mt-4 sm:mt-0 sm:absolute sm:-right-24 sm:top-24 flex flex-col items-center">
           <motion.button
             onClick={spin}
@@ -187,13 +161,10 @@ export default function GachaGame() {
           >
             <span className="absolute inset-0 rounded-full ring-4 ring-yellow-300 -z-10" />
             <span className="absolute w-12 h-4 sm:w-14 sm:h-5 rounded-full bg-slate-200 shadow-inner" />
-            <span className="absolute bottom-1 right-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full shadow">
-              {remaining}
-            </span>
+            <span className="absolute bottom-1 right-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full shadow">{remaining}</span>
           </motion.button>
         </div>
 
-        {/* Chute */}
         <div className="w-20 h-20 sm:w-24 sm:h-24 bg-amber-200 rounded-b-3xl border-x-4 border-b-4 border-amber-300 flex items-center justify-center mt-2 shadow-inner overflow-hidden">
           <AnimatePresence>
             {capsuleIdx !== null && (
@@ -204,17 +175,12 @@ export default function GachaGame() {
                 transition={{ type: 'spring', stiffness: 110, damping: 16 }}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-lg flex items-center justify-center bg-white overflow-hidden"
               >
-                {prize?.imageUrl ? (
-                  <img src={prize.imageUrl} alt={prize.name} className="w-12 h-12 sm:w-16 sm:h-16 object-contain" />
-                ) : (
-                  <span className="text-2xl sm:text-3xl">🥳</span>
-                )}
+                {prize?.imageUrl ? <img src={prize.imageUrl} alt={prize.name} className="w-12 h-12 sm:w-16 sm:h-16 object-contain" /> : <span className="text-2xl sm:text-3xl">🥳</span>}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Prize banner */}
         <AnimatePresence>
           {prize && (
             <motion.div
@@ -222,17 +188,12 @@ export default function GachaGame() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 110, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 120, damping: 15 }}
-              className="absolute top-full mt-5 sm:mt-6 left-1/2 -translate-x-1/2 px-6 py-3 min-w-[260px] sm:min-w-[320px] rounded-xl bg-pink-200 text-pink-900 text-xl sm:text-2xl font-semibold shadow text-center whitespace-nowrap flex items-center gap-2 sm:gap-3 justify-center"
+              className="absolute top-full mt-5 sm:mt-6 left-1/2 -translate-x-1/2 px-6 py-3 min-w-[260px] sm:min-w-[320px] max-w-[90vw] rounded-xl bg-pink-200 text-pink-900 text-xl sm:text-2xl font-semibold shadow text-center whitespace-normal flex items-center gap-2 sm:gap-3 justify-center"
             >
               {prize.imageUrl && <img src={prize.imageUrl} alt={prize.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />}
               <span>Du fikk: {prize.name}</span>
               {!confirmed ? (
-                <button
-                  onClick={handleConfirmClick}
-                  className="ml-3 sm:ml-4 px-3 sm:px-4 py-0.5 sm:py-1 bg-amber-500 hover:bg-amber-600 text-white rounded transition text-base sm:text-lg"
-                >
-                  Bekreft
-                </button>
+                <button onClick={handleConfirmClick} className="ml-3 sm:ml-4 px-3 sm:px-4 py-0.5 sm:py-1 bg-amber-500 hover:bg-amber-600 text-white rounded transition text-base sm:text-lg">Bekreft</button>
               ) : (
                 <span className="ml-3 sm:ml-4 text-emerald-700">✔ Lagret</span>
               )}
@@ -241,7 +202,6 @@ export default function GachaGame() {
         </AnimatePresence>
       </div>
 
-      {/* Confirmation modal */}
       <AnimatePresence>
         {showModal && prize && (
           <>
