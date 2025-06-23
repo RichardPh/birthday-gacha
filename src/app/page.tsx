@@ -44,7 +44,7 @@ export default function LoginPage() {
         chosenPrize: data.chosenPrize ?? null,
       });
       router.push(`/game/${code}`);
-    } catch (err) {
+    } catch {
       setError('Uventet nettverksfeil.');
     } finally {
       setLoading(false);
