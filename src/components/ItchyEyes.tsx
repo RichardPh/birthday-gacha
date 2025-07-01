@@ -6,7 +6,7 @@ import { useSession } from '@/store/useSession';
 import Confetti from 'react-confetti';
 
 /* ---------- tweakable balances ---------- */
-const SCRATCH_GAIN_PER_PX = 0.005;;
+const SCRATCH_GAIN_PER_PX = 0.01;;
 const BASE_DECAY_PER_SEC  = 30;
 const HAND_INTERVAL_MS:  [number, number] = [3000, 6000];
 const HAND_DURATION_MS:  [number, number] = [ 600, 3000];
@@ -176,8 +176,8 @@ export default function ItchyEyes() {
 
       {/* ──────────────── JUI-MÆK-OMETER ──────────────── */}
         <div
-            /* 20 px up on phones, only 8 px up on md+ screens */
-            className="absolute inset-x-0 bottom-20 md:bottom-8 flex flex-col items-center"
+            /* 40 px up on phones, only 8 px up on md+ screens */
+            className="absolute inset-x-0 bottom-40 md:bottom-8 flex flex-col items-center"
             >
             <span className="mb-1 text-sm md:text-base font-semibold tracking-widest text-emerald-800 drop-shadow-sm">
                 JUI-MÆK-OMETER
