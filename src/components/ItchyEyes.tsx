@@ -6,7 +6,7 @@ import { useSession } from '@/store/useSession';
 import Confetti from 'react-confetti';
 
 /* ---------- tweakable balances ---------- */
-const SCRATCH_GAIN_PER_PX = 0.01;
+const SCRATCH_GAIN_PER_PX = 0.005;;
 const BASE_DECAY_PER_SEC  = 30;
 const HAND_INTERVAL_MS:  [number, number] = [3000, 6000];
 const HAND_DURATION_MS:  [number, number] = [ 600, 3000];
@@ -174,16 +174,23 @@ export default function ItchyEyes() {
         animate={{ opacity: meter / 120 }}
       />
 
-      {/* scratch meter */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-11/12 max-w-lg">
-        <div className="h-4 w-full rounded-full bg-white/70 shadow-inner">
-          <motion.div
-            className="h-4 rounded-full bg-rose-500"
-            animate={{ width: `${meter}%` }}
-            transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
-          />
+      {/* ──────────────── JUI-MÆK-OMETER ──────────────── */}
+        <div
+            /* 20 px up on phones, only 8 px up on md+ screens */
+            className="absolute inset-x-0 bottom-20 md:bottom-8 flex flex-col items-center"
+            >
+            <span className="mb-1 text-sm md:text-base font-semibold tracking-widest text-emerald-800 drop-shadow-sm">
+                JUI-MÆK-OMETER
+            </span>
+
+            <div className="h-4 w-11/12 max-w-lg rounded-full bg-white/70 shadow-inner">
+                <motion.div
+                className="h-4 rounded-full bg-rose-500"
+                animate={{ width: `${meter}%` }}
+                transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+                />
+            </div>
         </div>
-      </div>
 
       {/* hand + banner */}
       <AnimatePresence initial={false}>
