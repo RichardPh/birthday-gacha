@@ -6,7 +6,7 @@ import { useSession } from '@/store/useSession';
 import Confetti from 'react-confetti';
 
 /* ---------- tweakable balances ---------- */
-const SCRATCH_GAIN_PER_PX = 0.01;
+const SCRATCH_GAIN_PER_PX = 0.007;
 const BASE_DECAY_PER_SEC  = 30;
 const HAND_INTERVAL_MS:  [number, number] = [3000, 6000];
 const HAND_DURATION_MS:  [number, number] = [ 600, 3000];
