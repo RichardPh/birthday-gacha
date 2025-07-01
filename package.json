@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:push": "drizzle-kit push"
+    "lint": "next lint"
   },
   "dependencies": {
     "@libsql/client": "^0.15.9",
