@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from '@/store/useSession';
-import { useRouter, usePathname } from 'next/navigation';
 import Confetti from 'react-confetti';
 
 /* ---------- tweakable balances ---------- */
@@ -18,8 +17,6 @@ const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 export default function ItchyEyes() {
   /* session / router */
   const { code, set } = useSession();
-  const router   = useRouter();
-  const pathname = usePathname();
 
   /* gameplay state */
   const [meter, setMeter]       = useState(0);
