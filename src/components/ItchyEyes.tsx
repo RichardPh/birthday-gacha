@@ -29,7 +29,7 @@ export default function ItchyEyes() {
 
   /* pointer tracking */
   const lastPoint       = useRef<{x:number,y:number}|null>(null);
-  const activePointerId = useRef<number | null>(null);   // 👈 one-finger lock
+  const activePointerId = useRef<number | null>(null);   // enforce one finger
 
   /* eyelid opening */
   useEffect(() => {
@@ -66,18 +66,18 @@ export default function ItchyEyes() {
     return () => clearTimeout(timeout);
   }, [won, sceneOpen]);
 
-  /* ---------- scratch handlers (one-finger enforced) ---------- */
+  /* ---------- scratch handlers (one-finger) ---------- */
   const onPointerDown = (e: React.PointerEvent) => {
     if (blocked || won) return;
-    if (activePointerId.current !== null) return;          // another finger -> ignore
+    if (activePointerId.current !== null) return;        // another finger? ignore
 
-    activePointerId.current = e.pointerId;                 // claim this finger
+    activePointerId.current = e.pointerId;
     setScratch(true);
     lastPoint.current = { x: e.clientX, y: e.clientY };
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if (e.pointerId !== activePointerId.current) return;   // only active finger
+    if (e.pointerId !== activePointerId.current) return;
     if (!scratching || blocked || won) return;
 
     if (!lastPoint.current) {
@@ -98,7 +98,7 @@ export default function ItchyEyes() {
     if (e.pointerId !== activePointerId.current) return;
     setScratch(false);
     lastPoint.current = null;
-    activePointerId.current = null;                        // release for next finger
+    activePointerId.current = null;
   };
 
   /* win condition */
@@ -124,6 +124,9 @@ export default function ItchyEyes() {
   /* viewport for confetti */
   const { innerWidth: w = 800, innerHeight: h = 600 } =
     typeof window === 'undefined' ? {} : window;
+
+  /* ---------- eye sprite stage ---------- */
+  const stage = Math.min(3, Math.floor(meter / 34)); // 0-3 based on meter %
 
   /* ---------- render ---------- */
   return (
@@ -175,15 +178,24 @@ export default function ItchyEyes() {
           />
         ))}
 
-      {/* swelling overlay */}
+      {/* cartoon eyes (above pollen, below overlay) */}
+      {sceneOpen && (
+        <img
+          src={`/eyes_${stage}.png`}
+          alt="Swelling eyes"
+          className="absolute inset-0 m-auto w-48 md:w-56 pointer-events-none select-none z-20"
+        />
+      )}
+
+      {/* swelling overlay (kept subtle) */}
       <motion.div
         className="absolute inset-0 bg-rose-400 pointer-events-none"
         style={{ mixBlendMode: 'multiply' }}
         animate={{ opacity: meter / 120 }}
       />
 
-      {/* ───────────── JUI-MÆK-OMETER (raised) ───────────── */}
-      <div className="absolute inset-x-0 bottom-32 md:bottom-12 flex flex-col items-center">
+      {/* ── JUI-MÆK-OMETER ── */}
+      <div className="absolute inset-x-0 bottom-32 md:bottom-12 flex flex-col items-center z-30">
         <span className="mb-1 text-sm md:text-base font-semibold tracking-widest text-emerald-800 drop-shadow-sm">
           JUI-MÆK-OMETER
         </span>
@@ -204,7 +216,7 @@ export default function ItchyEyes() {
               key="hand"
               src="/hand.png"
               alt=""
-              className="absolute h-40 w-40 pointer-events-none"
+              className="absolute h-40 w-40 pointer-events-none z-40"
               style={{ top: h * 0.25, left: '50%' }}
               initial={{ x: '-100vw' }}
               animate={{ x: '-50%' }}
@@ -213,7 +225,7 @@ export default function ItchyEyes() {
             />
             <motion.div
               key={blockKey}
-              className="absolute inset-x-0 top-10 mx-auto w-fit rounded-lg bg-amber-200/90 px-4 py-2 text-lg font-semibold text-amber-900 shadow-md"
+              className="absolute inset-x-0 top-10 mx-auto w-fit rounded-lg bg-amber-200/90 px-4 py-2 text-lg font-semibold text-amber-900 shadow-md z-40"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
