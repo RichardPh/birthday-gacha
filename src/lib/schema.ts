@@ -13,5 +13,6 @@ export const prizes = sqliteTable('prizes', {
   id:        integer('id').primaryKey({ autoIncrement: true }),
   name:      text('name').notNull(),
   imageUrl:  text('image_url'),          // nullable → some prizes can be text-only
-  weight:    integer('weight').default(1) // optional for rarity weighting
+  weight:    integer('weight').default(1), // optional for rarity weighting
+  game:      text('game').notNull().default('gacha'), // default to 'gacha'
 });

@@ -3,7 +3,7 @@
 import { motion, AnimatePresence, useAnimationControls } from 'framer-motion';
 import Confetti from 'react-confetti';
 import { useSession } from '@/store/useSession';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useWindowSize } from '@react-hook/window-size';
 
 interface Prize {
@@ -63,6 +63,25 @@ export default function GachaGame() {
   const dialCtrl = useAnimationControls();
   const [vw, vh] = useWindowSize();
 
+  /**
+   * 🔊 Audio --------------------------------------------------------------
+   * The audio element is created once (on mount) and stored in a ref so we
+   * can play / pause it imperatively from within the `spin` callback.
+   * ----------------------------------------------------------------------
+   * - Place your slot‑machine sound at `/public/sounds/slot-spin.mp3` (or
+   *   update the path below to wherever you keep static assets).
+   * - Keep the volume modest; users may have headphones on.
+   */
+  const spinSoundRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    const audio = new Audio('/sounds/slot-spin.mp3');
+    audio.preload = 'auto';
+    audio.volume = 0.6;
+    spinSoundRef.current = audio;
+  }, []);
+
+  // ----------------------------------------------------------------------
+
   useEffect(() => {
     fetch('/api/prizes').then(r => r.json()).then((rows: Prize[]) => setBubbles(rows));
   }, []);
@@ -80,6 +99,18 @@ export default function GachaGame() {
     setIsSpinning(true);
     setPrize(null);
 
+    // ▶️  Play the slot‑machine sound
+    if (spinSoundRef.current) {
+      try {
+        spinSoundRef.current.currentTime = 0;
+        await spinSoundRef.current.play();
+      } catch (err) {
+        // Autoplay policies should not block because this is a user gesture,
+        // but catch just in case (e.g., very old browsers).
+        console.warn('Could not play spin sound', err);
+      }
+    }
+
     const res = await fetch('/api/spend', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -87,6 +118,7 @@ export default function GachaGame() {
     });
     if (!res.ok) {
       setIsSpinning(false);
+      spinSoundRef.current?.pause();
       return;
     }
     const data = await res.json();
@@ -105,6 +137,11 @@ export default function GachaGame() {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
       set({ remaining: remaining - 1 });
+
+      // 🔇  Fade out or pause the sound once the prize is revealed
+      if (spinSoundRef.current) {
+        spinSoundRef.current.pause();
+      }
     }, (SPIN_DURATION + 0.1) * 1000);
 
     setTimeout(() => {

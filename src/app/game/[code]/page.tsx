@@ -12,6 +12,7 @@ import { useSession } from '@/store/useSession';
 const COMPONENTS: Record<string, ReturnType<typeof dynamic>> = {
   gacha: dynamic(() => import('@/components/GachaGame'), { ssr: false }),
   wheel: dynamic(() => import('@/components/WheelGame'), { ssr: false }),
+  'itchy-eyes': dynamic(() => import('@/components/ItchyEyes'), { ssr: false }),
   // quiz : dynamic(() => import('@/components/QuizGame'),  { ssr:false }),
 };
 
