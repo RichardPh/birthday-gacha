@@ -6,7 +6,7 @@ import { useSession } from '@/store/useSession';
 import Confetti from 'react-confetti';
 
 /* ---------- tweakable balances ---------- */
-const SCRATCH_GAIN_PER_PX = 0.01;;
+const SCRATCH_GAIN_PER_PX = 0.01;
 const BASE_DECAY_PER_SEC  = 30;
 const HAND_INTERVAL_MS:  [number, number] = [3000, 6000];
 const HAND_DURATION_MS:  [number, number] = [ 600, 3000];
@@ -15,7 +15,7 @@ const HAND_DURATION_MS:  [number, number] = [ 600, 3000];
 const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
 export default function ItchyEyes() {
-  /* session / router */
+  /* session */
   const { code, set } = useSession();
 
   /* gameplay state */
@@ -28,7 +28,8 @@ export default function ItchyEyes() {
   const [prize, setPrize]       = useState<{ imageUrl: string; name: string } | null>(null);
 
   /* pointer tracking */
-  const lastPoint = useRef<{x:number,y:number}|null>(null);
+  const lastPoint       = useRef<{x:number,y:number}|null>(null);
+  const activePointerId = useRef<number | null>(null);   // 👈 one-finger lock
 
   /* eyelid opening */
   useEffect(() => {
@@ -65,15 +66,20 @@ export default function ItchyEyes() {
     return () => clearTimeout(timeout);
   }, [won, sceneOpen]);
 
-  /* scratch handlers */
+  /* ---------- scratch handlers (one-finger enforced) ---------- */
   const onPointerDown = (e: React.PointerEvent) => {
     if (blocked || won) return;
+    if (activePointerId.current !== null) return;          // another finger -> ignore
+
+    activePointerId.current = e.pointerId;                 // claim this finger
     setScratch(true);
     lastPoint.current = { x: e.clientX, y: e.clientY };
   };
 
   const onPointerMove = (e: React.PointerEvent) => {
+    if (e.pointerId !== activePointerId.current) return;   // only active finger
     if (!scratching || blocked || won) return;
+
     if (!lastPoint.current) {
       lastPoint.current = { x: e.clientX, y: e.clientY };
       return;
@@ -88,9 +94,11 @@ export default function ItchyEyes() {
     }
   };
 
-  const onPointerUp = () => {
+  const finishPointer = (e: React.PointerEvent) => {
+    if (e.pointerId !== activePointerId.current) return;
     setScratch(false);
     lastPoint.current = null;
+    activePointerId.current = null;                        // release for next finger
   };
 
   /* win condition */
@@ -109,7 +117,7 @@ export default function ItchyEyes() {
       .then(r => r.json())
       .then(({ prize }) => {
         set({ chosenPrize: prize, remaining: 0 });
-        setPrize(prize);          // store for overlay preview
+        setPrize(prize);
       });
   }, [won, code, set]);
 
@@ -123,8 +131,8 @@ export default function ItchyEyes() {
       className="relative w-screen h-screen overflow-hidden bg-emerald-50 touch-none"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
+      onPointerUp={finishPointer}
+      onPointerCancel={finishPointer}
     >
       {/* eyelids */}
       <AnimatePresence>
@@ -174,23 +182,19 @@ export default function ItchyEyes() {
         animate={{ opacity: meter / 120 }}
       />
 
-      {/* ──────────────── JUI-MÆK-OMETER ──────────────── */}
-        <div
-            /* 40 px up on phones, only 8 px up on md+ screens */
-            className="absolute inset-x-0 bottom-40 md:bottom-8 flex flex-col items-center"
-            >
-            <span className="mb-1 text-sm md:text-base font-semibold tracking-widest text-emerald-800 drop-shadow-sm">
-                JUI-MÆK-OMETER
-            </span>
-
-            <div className="h-4 w-11/12 max-w-lg rounded-full bg-white/70 shadow-inner">
-                <motion.div
-                className="h-4 rounded-full bg-rose-500"
-                animate={{ width: `${meter}%` }}
-                transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
-                />
-            </div>
+      {/* ───────────── JUI-MÆK-OMETER (raised) ───────────── */}
+      <div className="absolute inset-x-0 bottom-32 md:bottom-12 flex flex-col items-center">
+        <span className="mb-1 text-sm md:text-base font-semibold tracking-widest text-emerald-800 drop-shadow-sm">
+          JUI-MÆK-OMETER
+        </span>
+        <div className="h-4 w-11/12 max-w-lg rounded-full bg-white/70 shadow-inner">
+          <motion.div
+            className="h-4 rounded-full bg-rose-500"
+            animate={{ width: `${meter}%` }}
+            transition={{ type: 'tween', ease: 'linear', duration: 0.1 }}
+          />
         </div>
+      </div>
 
       {/* hand + banner */}
       <AnimatePresence initial={false}>
@@ -224,7 +228,7 @@ export default function ItchyEyes() {
       {/* confetti */}
       {won && <Confetti width={w} height={h} numberOfPieces={350} recycle={false} />}
 
-      {/* victory overlay with prize preview */}
+      {/* victory overlay */}
       <AnimatePresence>
         {won && (
           <motion.div
