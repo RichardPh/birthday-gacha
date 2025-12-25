@@ -151,6 +151,19 @@ export default function GachaGame() {
     }, RESET_DELAY);
   }, [isSpinning, remaining, confirmed, code, set, rotorCtrl, dialCtrl]);
 
+  // Add keyboard event listener for Space key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !showModal) {
+        e.preventDefault();
+        spin();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [spin, showModal]);
+
   const handleConfirmClick = () => setShowModal(true);
 
   const confirmPrize = useCallback(async () => {
