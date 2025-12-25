@@ -58,7 +58,7 @@ export default function LoginPage() {
         className="bg-white p-8 w-80 rounded-2xl shadow-xl space-y-4"
       >
         <h1 className="text-2xl font-bold text-center text-indigo-900">
-          Du har bursdag! Skriv inn koden din! 🎉🎂
+          Skriv inn koden din! 🎉🎂
         </h1>
 
         <input
